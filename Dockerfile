@@ -1,11 +1,12 @@
+ARG DEBIAN_FRONTEND=noninteractive
+ARG BASE_PATH=""
+ENV BASE_PATH=$BASE_PATH
+
 # Stage: monolith-builder
 # Purpose: Uses the Rust image to build monolith
 # Notes:
 #  - Fine to leave extra here, as only the resulting binary is copied out
 FROM docker.io/rust:1.80-bullseye AS monolith-builder
-
-ARG BASE_PATH=""
-ENV BASE_PATH=$BASE_PATH
 
 RUN set -eux && cargo install --locked monolith
 
@@ -14,8 +15,6 @@ RUN set -eux && cargo install --locked monolith
 # Notes:
 #  - Nothing extra should be left here.  All commands should cleanup
 FROM node:18.18-bullseye-slim AS main-app
-
-ARG DEBIAN_FRONTEND=noninteractive
 
 RUN mkdir /data
 
