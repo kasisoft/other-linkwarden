@@ -4,6 +4,9 @@
 #  - Fine to leave extra here, as only the resulting binary is copied out
 FROM docker.io/rust:1.80-bullseye AS monolith-builder
 
+ARG BASE_PATH=""
+ENV BASE_PATH=$BASE_PATH
+
 RUN set -eux && cargo install --locked monolith
 
 # Stage: main-app
@@ -19,6 +22,7 @@ RUN mkdir /data
 WORKDIR /data
 
 COPY ./package.json ./yarn.lock ./playwright.config.ts ./
+RUN echo "BASE_PATH=$BASE_PATH" >>.env
 
 RUN --mount=type=cache,sharing=locked,target=/usr/local/share/.cache/yarn \
     set -eux && \
