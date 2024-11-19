@@ -4,7 +4,7 @@
 #  - Fine to leave extra here, as only the resulting binary is copied out
 FROM docker.io/rust:1.80-bullseye AS monolith-builder
 
-ARG BASE_PATH=""
+ARG BASE_PATH
 ENV BASE_PATH=${BASE_PATH}
 
 RUN set -eux && cargo install --locked monolith
@@ -21,6 +21,8 @@ RUN mkdir /data
 
 WORKDIR /data
 
+RUN echo "BASE_PATH=$BASE_PATH" >>.env_1
+
 COPY ./package.json ./yarn.lock ./playwright.config.ts ./
 RUN echo "BASE_PATH=$BASE_PATH" >>.env
 
@@ -28,8 +30,12 @@ RUN --mount=type=cache,sharing=locked,target=/usr/local/share/.cache/yarn \
     set -eux && \
     yarn install --network-timeout 10000000
 
+RUN echo "BASE_PATH=$BASE_PATH" >>.env_2
+
 # Copy the compiled monolith binary from the builder stage
 COPY --from=monolith-builder /usr/local/cargo/bin/monolith /usr/local/bin/monolith
+
+RUN echo "BASE_PATH=$BASE_PATH" >>.env_3
 
 RUN set -eux && \
     npx playwright install --with-deps chromium && \
@@ -37,6 +43,8 @@ RUN set -eux && \
     yarn cache clean
 
 COPY . .
+
+RUN echo "BASE_PATH=$BASE_PATH" >>.env_4
 
 RUN yarn prisma generate && \
     yarn build
